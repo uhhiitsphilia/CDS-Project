@@ -7,9 +7,12 @@ from keras.preprocessing import sequence
 
 import re
 import pickle
-
+import tensorflow as tf
+# import numpy as np
 from keras.models import Sequential
-from keras.layers import Dense, Embedding, Input, LSTM, Bidirectional
+# from keras.layers import Dense, Embedding, Input, LSTM, Bidirectional
+
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer 
 
 class multi_models():
     def __init__(self, tnz_path, weights_path, mode, other_params=(100,5000,128)):
@@ -60,22 +63,55 @@ class multi_models():
     def build_model(self):
         (maxlen, max_features, embedding_dim)= self.other_params
         model = Sequential()
-        model.add(Embedding(max_features, embedding_dim,input_shape=(maxlen,),trainable=True))
-        model.add(Bidirectional(LSTM(64)))
-        model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(1, activation='sigmoid'))
-        # print(model.summary())
-        model.load_weights(self.weights_path)
+        # model.add(Embedding(max_features, embedding_dim,input_shape=(maxlen,),trainable=True))
+        # model.add(Bidirectional(LSTM(64)))
+        # model.compile(loss='binary_crossentropy',optimizer='adam',metrics=['accuracy'])
+        # model.add(Dense(64, activation='relu'))
+        # model.add(Dense(1, activation='sigmoid'))
+        # # print(model.summary())
+        # model.load_weights(self.weights_path)
+        model = tf.keras.models.load_model(self.weights_path)
         return model
-    
+
+
+def sentiment_scores(sentence): 
+  
+    # Create a SentimentIntensityAnalyzer object. 
+    sid_obj = SentimentIntensityAnalyzer() 
+  
+    # polarity_scores method of SentimentIntensityAnalyzer 
+    # oject gives a sentiment dictionary. 
+    # which contains pos, neg, neu, and compound scores. 
+    sentiment_dict = sid_obj.polarity_scores(sentence) 
+      
+    print("Overall sentiment dictionary is : ", sentiment_dict) 
+    print("sentence was rated as ", sentiment_dict['neg']*100, "% Negative") 
+    print("sentence was rated as ", sentiment_dict['neu']*100, "% Neutral") 
+    print("sentence was rated as ", sentiment_dict['pos']*100, "% Positive") 
+    result = None
+    # decide sentiment as positive, negative and neutral 
+    # if sentiment_dict['compound'] > 0.05 : 
+    #     print("Positive") 
+    #     result = ["positive",1]
+  
+    # elif sentiment_dict['compound'] < - 0.05 : 
+    #     print("Negative") 
+    #     result = ["negative",0]
+
+    # else : 
+    #     print("Neutral") 
+    #     result = ["netural",0.5]
+    return sentiment_dict
+
 if __name__=="__main__":
-    tnz_path = ['tnz_stem.pickle','tnz_lemm.pickle']
-    weights_path = ['BiLSTM_stem.h5','BiLSTM_lemm.h5']
-    mode = ["PorterStemmer","WordNetLemmatizer"]
-    review = "Grab the family, get comfy & enjoy great singing, acting, sets, & animation. The people that rated this low apparently need more movies like this in their lives. It was beautiful, clean and added a bit of magic & belief which is what we all need this Christmas. Wonderfully over the top - I highly recommend watching!!"
+    # review = "I am SJ."
+    review = "What a magical movie!!! The colors!! The costumes!!! The singing!!! The sets!!!! The magic!!! It's a cross between The Wiz and Greatest Showman. I enjoyed every minute and will surely watch Jingle Jangle every Christmas holiday going forward right alongside Polar Express and Elf."
+    tnz_path = 'tnz_raw.pickle'
+    weights_path = ['best_model02.hdf5','best_model21.hdf5']
+    mode = ["Raw","Raw"]
+    y_pred=[]
     for i in range(2):
-        mm = multi_models(tnz_path[i], weights_path[i], mode[i])
-        y_pred = mm.postive_score(review)
-        print(y_pred)
+        mm = multi_models(tnz_path, weights_path[i], mode[i])
+        y_pred.append(str(round(mm.postive_score(review),3)))
+    print(y_pred)
     
