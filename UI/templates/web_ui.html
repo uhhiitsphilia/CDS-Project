@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>LeetCode</title>
+    <title>SentimentMultiModel</title>
     <script src="https://code.jquery.com/jquery-3.1.0.js"></script>
     <link href="http://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
     <style>
@@ -54,19 +55,50 @@
             background: #F9F0DA;
         }
 
-        .card {
-            display: block;
+        .card.le05 {
+            display: inline-block;
             margin-left: 5%;
             margin-right: 5%;
             width: 90%;
             padding: 15px 10%;
             border-radius: 5px 5px 5px 5px;
-            background: #F9F0DA;
-            border: 3px #A3D0C3;
+            background: #b11d1d;
+            border: 3px #ffffff;
+            -webkit-margin-before: 1em;
+            -webkit-margin-after: 1em;
+        }
+        .card.eq05 {
+            display: inline-block;
+            margin-left: 5%;
+            margin-right: 5%;
+            width: 90%;
+            padding: 15px 10%;
+            border-radius: 5px 5px 5px 5px;
+            background: #0459f7;
+            border: 3px #ffffff;
+            -webkit-margin-before: 1em;
+            -webkit-margin-after: 1em;
+        }
+        .card.ge05 {
+            display: inline-block;
+            margin-left: 5%;
+            margin-right: 5%;
+            width: 90%;
+            padding: 15px 10%;
+            border-radius: 5px 5px 5px 5px;
+            background-color: rgb(206, 255, 127);
+            border: 3px #ffffff;
             -webkit-margin-before: 1em;
             -webkit-margin-after: 1em;
         }
 
+        #list>div {
+            display: inline-block;
+        }
+
+        #list {
+            text-align: center;
+        }
     </style>
     <script>
         search = function () {
@@ -89,13 +121,41 @@
                         ps.innerHTML = "<div class=\"card\">\n<h2>An expection has occured: empty result</h2>\n</div>"
                         list.append(ps);
                     } else {
-                        let key = data["key"];
-                        let length = data["length"];
+                        let key = data["rnn"]["key"];
+                        let length = data["rnn"]["length"];
                         for (let i = 0; i < length; i++) {
                             let ps = document.createElement('div');
-                            ps.innerHTML = "<div class=\"card\">\n<h2>Preprocessing: "+data["key"][i]+"</h2>\n<h2>The model name is LSTD2D</h2>\n<h2>The result is: "+ data["result"][i] +"</h2>\n</div>"
+                            if (parseFloat(data["rnn"]["result"][i]) > 0.5) {
+                                ps.innerHTML = "<div class=\"card ge05\">\n<h2>Model " + key[i] + "</h2>\n<h2>Confidence to be positive: " + data["rnn"]["result"][i] + "</h2>\n</div>"
+                            } else {
+                                ps.innerHTML = "<div class=\"card le05\">\n<h2>Model " + key[i] + "</h2>\n<h2>Confidence to be positive: " + data["rnn"]["result"][i] + "</h2>\n</div>"
+                            }
                             list.append(ps);
-                        }
+                            }
+
+                            let sentiment_dict = data["vader"]["result"];
+                            let decision = data["vader"]["decision"];
+                            let ps = document.createElement('div');
+                            if (parseFloat(sentiment_dict["compound"])>0.05) {
+                                ps.innerHTML = "<div class=\"card ge05\">\n<h2>VADER model result is positive:</h2>\n<h2>Overall rating is: </h2>\n<h2 style='text-align:left'>"+sentiment_dict["pos"]+" positive, "+"</h2>\n<h2>"+sentiment_dict["neu"]+" neutral</h2>\n<h2>"+sentiment_dict["neg"]+" negative.</h2>\n</div>"
+                                list.append(ps);
+                            } if (parseFloat(sentiment_dict["compound"])<-0.05) {
+                                ps.innerHTML = "<div class=\"card le05\">\n<h2>VADER model result is negative:</h2>\n<h2>Overall rating is: </h2>\n<h2>"+sentiment_dict["pos"]+" positive, "+"</h2>\n<h2>"+sentiment_dict["neu"]+" neutral</h2>\n<h2>"+sentiment_dict["neg"]+" negative.</h2>\n</div>"
+                                list.append(ps);
+                            } else {
+                                ps.innerHTML = "<div class=\"card eq05\">\n<h2>VADER model result is neutral:</h2>\n<h2>Overall rating is: </h2>\n<h2>"+sentiment_dict["pos"]+" positive, "+"</h2>\n<h2>"+sentiment_dict["neu"]+" neutral</h2>\n<h2>"+sentiment_dict["neg"]+" negative.</h2>\n</div>"
+                                list.append(ps);
+                            }
+
+                            let label = data["bert"];
+                            ps = document.createElement('div');
+                            if (parseFloat(label)>0.5){
+                                ps.innerHTML = "<div class=\"card ge05\">\n<h2>BERT model result is positive.</h2>\n<h2>_</h2>\n<h2>_</h2>\n<h2>_</h2>\n<h2>_</h2>"
+                                list.append(ps);
+                            } else {
+                                ps.innerHTML = "<div class=\"card le05\">\n<h2>BERT model result is negative</h2>\n<h2>_</h2>\n<h2>_</h2>\n<h2>_</h2>\n<h2>_</h2>"
+                                list.append(ps);
+                            }
                     }
                     container.append(list);
                 }
@@ -104,14 +164,15 @@
         }
     </script>
 </head>
+
 <body>
-<div id="container">
-    <div class="search bar">
-        <input id="searchInput" type="text" maxlength="500" placeholder="Type in the test review ..."
-               autocomplete="off"
-               onkeyup="if(event.keyCode==13) {search()}">
-        <button class="searchDiv" onclick="search()"></button>
+    <div id="container">
+        <div class="search bar">
+            <input id="searchInput" type="text" maxlength="500" placeholder="Type in the test review ..."
+                autocomplete="off" onkeyup="if(event.keyCode==13) {search()}">
+            <button class="searchDiv" onclick="search()"></button>
+        </div>
     </div>
-</div>
 </body>
+
 </html>
